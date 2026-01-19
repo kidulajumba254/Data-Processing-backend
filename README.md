@@ -74,7 +74,7 @@ src/main/java/com/dataprocessing/
 
 1. Create a PostgreSQL database:
 ```sql
-CREATE DATABASE dataprocessing;
+CREATE DATABASE student_db;
 ```
 
 2. Update `application.properties` with your credentials:
@@ -88,8 +88,8 @@ spring.datasource.password=your_password
 
 1. Clone the repository
 ```bash
-git clone <repository-url>
-cd data-processing-api
+git clone <https://github.com/kidulajumba254/Data-Processing-backend.git>
+cd studentdataprocessor
 ```
 
 2. Build the project
@@ -102,14 +102,14 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-The API will start on `http://localhost:8080`
+The API will start on `http://localhost:8081`
 
 ## Swagger Documentation
 
 Once the application is running, you can access the interactive API documentation:
 
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **API Docs (JSON)**: http://localhost:8080/api-docs
+- **Swagger UI**: http://localhost:8081/swagger-ui.html
+- **API Docs (JSON)**: http://localhost:8081/api-docs
 
 Swagger UI provides:
 - Interactive API testing
@@ -225,17 +225,17 @@ Based on system specifications:
 
 1. **Generate Test Data**:
 ```bash
-curl -X POST "http://localhost:8080/api/data/generate?numberOfRecords=1000000"
+curl -X POST "http://localhost:8081/api/data/generate?numberOfRecords=1000000"
 ```
 
 2. **Check Progress**:
 ```bash
-curl "http://localhost:8080/api/data/progress/{taskId}"
+curl "http://localhost:8081/api/data/progress/{taskId}"
 ```
 
 3. **View Students**:
 ```bash
-curl "http://localhost:8080/api/students?page=0&size=10"
+curl "http://localhost:8081/api/students?page=0&size=10"
 ```
 
 ## Error Handling
