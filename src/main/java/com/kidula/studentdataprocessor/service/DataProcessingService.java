@@ -2,6 +2,7 @@ package com.kidula.studentdataprocessor.service;
 
 import com.opencsv.CSVWriter;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.util.IOUtils;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ public class DataProcessingService {
 
     @Async
     public void processExcelToCsv(String taskId, MultipartFile file) {
+        IOUtils.setByteArrayMaxOverride(200_000_000);
         long startTime = System.currentTimeMillis();
         String csvFileName = "students_" + System.currentTimeMillis() + ".csv";
         String csvFilePath = null;
