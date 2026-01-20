@@ -17,7 +17,7 @@ A comprehensive Spring Boot application for processing large-scale student data 
 - Real-time progress tracking
 - Memory-efficient streaming (XSSFSheetXMLHandler)
 
-  <img width="877" height="562" alt="data generation" src="https://github.com/user-attachments/assets/f1872e0c-a49f-4c54-93da-754222f53494" />
+ <img width="578" height="347" alt="100%_complete" src="https://github.com/user-attachments/assets/142fad39-36e8-46ac-b245-c1f50558ec96" />
 
   <img width="1094" height="766" alt="excel" src="https://github.com/user-attachments/assets/26da470d-03b1-4ae6-b27c-b59cd01010c8" />
 
