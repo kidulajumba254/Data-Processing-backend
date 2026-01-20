@@ -42,7 +42,7 @@ public class DataUploadService {
 
             // Dynamic row counting for accurate progress
             long totalLines = java.nio.file.Files.lines(csvFile.toPath()).count() - 1;
-            if (totalLines <= 0) totalLines = 1000000; // Fallback
+            if (totalLines <= 0) totalLines = 1000000; 
 
             while ((line = reader.readNext()) != null) {
                 Student student = new Student(
@@ -75,7 +75,7 @@ public class DataUploadService {
         }
     }
 
-    @Transactional // Only the small batch is transactional
+    @Transactional 
     public void saveBatch(List<Student> batch) {
         studentRepository.saveAll(batch);
         studentRepository.flush();
