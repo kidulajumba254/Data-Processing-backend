@@ -15,39 +15,32 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class DataGenerationService {
-
     @Autowired
     private ProgressTracker progressTracker;
-
     @Value("${file.storage.path:C:/var/log/applications/API/dataprocessing/}")
     private String storagePath;
-
     private static final String[] CLASSES = {"Class1", "Class2", "Class3", "Class4", "Class5"};
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static final Random random = new Random();
-
     @Async
     public void generateExcelData(String taskId, long numberOfRecords) {
+
+        if (numberOfRecords > 1_048_575) {
+            numberOfRecords = 1_048_575;
+        }
         long startTime = System.currentTimeMillis();
         String fileName = "students_" + System.currentTimeMillis() + ".xlsx";
-        String filePath = null;
-
+        String filePath = storagePath + fileName;
         try {
-            // Create directory if not exists
             File directory = new File(storagePath);
             if (!directory.exists()) {
                 directory.mkdirs();
             }
-
-            filePath = storagePath + fileName;
             File file = new File(filePath);
 
-            // Use SXSSFWorkbook for memory efficiency with large datasets
             try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
                  FileOutputStream fileOut = new FileOutputStream(file)) {
-
                 Sheet sheet = workbook.createSheet("Students");
-
                 // Create header row
                 Row headerRow = sheet.createRow(0);
                 String[] headers = {"studentId", "firstName", "lastName", "DOB", "class", "score"};
@@ -55,38 +48,31 @@ public class DataGenerationService {
                     Cell cell = headerRow.createCell(i);
                     cell.setCellValue(headers[i]);
                 }
-
-                // Create data rows
                 int updateInterval = (int) Math.max(1, numberOfRecords / 100);
-
                 for (long i = 1; i <= numberOfRecords; i++) {
                     Row row = sheet.createRow((int) i);
-
                     row.createCell(0).setCellValue(i);
                     row.createCell(1).setCellValue(generateRandomString(3, 8));
                     row.createCell(2).setCellValue(generateRandomString(3, 8));
                     row.createCell(3).setCellValue(generateRandomDate().toString());
                     row.createCell(4).setCellValue(CLASSES[random.nextInt(CLASSES.length)]);
                     row.createCell(5).setCellValue(random.nextInt(21) + 55);
-
-                    // Update progress every interval
+                    // Update progress periodically
                     if (i % updateInterval == 0 || i == numberOfRecords) {
                         progressTracker.updateProgress(taskId, i, numberOfRecords, startTime);
                     }
                 }
-
                 workbook.write(fileOut);
-                workbook.dispose(); // Clean up temporary files
+                fileOut.flush();
+                workbook.dispose();
+
+                progressTracker.completeProgress(taskId, numberOfRecords, startTime, filePath);
             }
-
-            progressTracker.completeProgress(taskId, numberOfRecords, startTime, filePath);
-
         } catch (Exception e) {
-            progressTracker.failProgress(taskId, e.getMessage());
+            progressTracker.failProgress(taskId, "Generation failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
     private String generateRandomString(int min, int max) {
         int length = random.nextInt(max - min + 1) + min;
         StringBuilder sb = new StringBuilder(length);
@@ -95,7 +81,6 @@ public class DataGenerationService {
         }
         return sb.toString();
     }
-
     private LocalDate generateRandomDate() {
         LocalDate start = LocalDate.of(2000, 1, 1);
         LocalDate end = LocalDate.of(2010, 12, 31);
