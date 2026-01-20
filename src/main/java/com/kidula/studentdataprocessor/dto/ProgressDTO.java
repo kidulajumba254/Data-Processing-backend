@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class ProgressDTO {
     private String taskId;
     private String status; // RUNNING, COMPLETED, FAILED
+    private long currentRecords;
+    private long totalRecords;
     private double progressPercentage;
     private long timeTakenSeconds;
     private long timeTakenMs;
