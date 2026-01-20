@@ -15,7 +15,7 @@ A comprehensive Spring Boot application for processing large-scale student data 
 - Generate Excel files with up to 1M student records
 - Random data generation with configurable parameters
 - Real-time progress tracking
-- Memory-efficient streaming (SXSSFWorkbook)
+- Memory-efficient streaming (XSSFSheetXMLHandler)
 
   <img width="877" height="562" alt="data generation" src="https://github.com/user-attachments/assets/f1872e0c-a49f-4c54-93da-754222f53494" />
 
@@ -220,7 +220,7 @@ Ensure these directories exist or the application will create them automatically
 ## Performance Optimization
 
 - **Batch Processing**: Database inserts use batch size of 1000
-- **Streaming**: SXSSFWorkbook for memory-efficient Excel generation
+- **Streaming**: XSSFSheetXMLHandler for memory-efficient Excel generation
 - **Asynchronous**: All long-running tasks run asynchronously
 - **Indexing**: Database indexes on studentId and class fields
 - **Connection Pooling**: HikariCP for optimal database connections
