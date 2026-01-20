@@ -17,10 +17,17 @@ A comprehensive Spring Boot application for processing large-scale student data 
 - Real-time progress tracking
 - Memory-efficient streaming (SXSSFWorkbook)
 
+  <img width="877" height="562" alt="data generation" src="https://github.com/user-attachments/assets/f1872e0c-a49f-4c54-93da-754222f53494" />
+
+
 ### Task 2: Excel to CSV Processing
 - Upload and process Excel files
 - Automatic score adjustment (+10)
 - Progress monitoring during conversion
+
+  <img width="1090" height="591" alt="procesed_excel" src="https://github.com/user-attachments/assets/8b36816a-c655-42bd-8f53-91897b6c80a2" />
+
+  
 
 ### Task 3: CSV to Database Upload
 - Batch processing for optimal performance
@@ -28,16 +35,32 @@ A comprehensive Spring Boot application for processing large-scale student data 
 - Transactional integrity
 - Progress tracking for large datasets
 
+  <img width="1141" height="950" alt="FIRST_20_IN_DESC" src="https://github.com/user-attachments/assets/47adb587-1208-417d-9710-2c47e1e00bf7" />
+
+  <img width="693" height="445" alt="Screenshot 2026-01-20 141148" src="https://github.com/user-attachments/assets/1e8ed447-dd2f-485c-9ea1-2c3a32c96873" />
+
+  <img width="238" height="89" alt="1-100000" src="https://github.com/user-attachments/assets/03e4e006-5fa5-4c78-9a66-0f7abb85a341" />
+
+
+
 ### Task 4: Student Report
 - Pagination support
 - Search by Student ID
 - Filter by Class
 - Export to Excel, CSV, and PDF
 
+<img width="1909" height="865" alt="task 4 5 UI" src="https://github.com/user-attachments/assets/fa75730f-d0a3-4502-b6b2-ea4b05cd4032" />
+
+
+<img width="1336" height="308" alt="var_location" src="https://github.com/user-attachments/assets/c6a0274b-1590-4464-9e37-c686cf852678" />
+
+
 ### Task 5: Bulk Data Export
 - Export all records (1M+) in multiple formats
 - Asynchronous processing with progress tracking
 - Support for Excel, CSV, and PDF formats
+
+  
 
 ## Project Structure
 
@@ -191,10 +214,6 @@ GET /api/students/export/progress/{taskId}
 C:\var\log\applications\API\dataprocessing\
 ```
 
-### Linux
-```
-/var/log/applications/API/dataprocessing/
-```
 
 Ensure these directories exist or the application will create them automatically.
 
