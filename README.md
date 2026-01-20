@@ -19,6 +19,9 @@ A comprehensive Spring Boot application for processing large-scale student data 
 
   <img width="877" height="562" alt="data generation" src="https://github.com/user-attachments/assets/f1872e0c-a49f-4c54-93da-754222f53494" />
 
+  <img width="1094" height="766" alt="excel" src="https://github.com/user-attachments/assets/26da470d-03b1-4ae6-b27c-b59cd01010c8" />
+
+
 
 ### Task 2: Excel to CSV Processing
 - Upload and process Excel files
