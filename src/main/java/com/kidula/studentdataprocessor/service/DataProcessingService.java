@@ -16,86 +16,94 @@ import java.io.InputStream;
 
 @Service
 public class DataProcessingService {
-
     @Autowired
     private ProgressTracker progressTracker;
-
     @Value("${file.storage.path:C:/var/log/applications/API/dataprocessing/}")
     private String storagePath;
-
     @Async
-    public void processExcelToCsv(String taskId, MultipartFile file) {
-        IOUtils.setByteArrayMaxOverride(200_000_000);
+    public void processExcelToCsv(String taskId, String tempFilePath) {
         long startTime = System.currentTimeMillis();
         String csvFileName = "students_" + System.currentTimeMillis() + ".csv";
-        String csvFilePath = null;
-
+        String csvFilePath = storagePath + csvFileName;
+        File uploadedFile = new File(tempFilePath);
+        
         try {
-            // Create directory if not exists
             File directory = new File(storagePath);
             if (!directory.exists()) {
                 directory.mkdirs();
             }
 
-            csvFilePath = storagePath + csvFileName;
-
-            Sheet sheet;
-            try (InputStream inputStream = file.getInputStream();
-                 Workbook workbook = new XSSFWorkbook(inputStream);
+            try (OPCPackage pkg = OPCPackage.open(uploadedFile);
                  CSVWriter csvWriter = new CSVWriter(new FileWriter(csvFilePath))) {
 
-                sheet = workbook.getSheetAt(0);
-                int totalRows = sheet.getPhysicalNumberOfRows();
-                int updateInterval = Math.max(1, totalRows / 100);
+                ReadOnlySharedStringsTable strings = new ReadOnlySharedStringsTable(pkg);
+                XSSFReader xssfReader = new XSSFReader(pkg);
+                StylesTable styles = xssfReader.getStylesTable();
+                XSSFReader.SheetIterator iter = (XSSFReader.SheetIterator) xssfReader.getSheetsData();
 
-                // Write header
-                Row headerRow = sheet.getRow(0);
-                String[] headers = new String[headerRow.getPhysicalNumberOfCells()];
-                for (int i = 0; i < headerRow.getPhysicalNumberOfCells(); i++) {
-                    headers[i] = getCellValueAsString(headerRow.getCell(i));
-                }
-                csvWriter.writeNext(headers);
+                if (iter.hasNext()) {
+                    try (InputStream sheetStream = iter.next()) {
+                        InputSource sheetSource = new InputSource(sheetStream);
+                        
+                        XSSFSheetXMLHandler.SheetContentsHandler sheetHandler = new XSSFSheetXMLHandler.SheetContentsHandler() {
+                            private int currentRow = -1;
+                            private String[] rowData = new String[6];
+                            private int totalRowsEstimate = 1000001; // Default for 1M + header
 
-                // Process data rows
-                for (int i = 1; i < totalRows; i++) {
-                    Row row = sheet.getRow(i);
-                    if (row != null) {
-                        String[] data = new String[row.getPhysicalNumberOfCells()];
-
-                        for (int j = 0; j < row.getPhysicalNumberOfCells(); j++) {
-                            Cell cell = row.getCell(j);
-                            if (j == 5) { // Score column - add 10
-                                int originalScore = (int) cell.getNumericCellValue();
-                                data[j] = String.valueOf(originalScore + 10);
-                            } else {
-                                data[j] = getCellValueAsString(cell);
+                            @Override
+                            public void startRow(int rowNum) {
+                                currentRow = rowNum;
+                                for (int i = 0; i < 6; i++) rowData[i] = "";
                             }
-                        }
 
-                        csvWriter.writeNext(data);
+                            @Override
+                            public void endRow(int rowNum) {
+                                if (rowNum == 0) {
+                                    csvWriter.writeNext(rowData); // Header
+                                } else if (rowNum > 0) {
+                                    try {
+                                        if (rowData[5] != null && !rowData[5].isEmpty()) {
+                                            int score = (int) Double.parseDouble(rowData[5]);
+                                            rowData[5] = String.valueOf(score + 10);
+                                        }
+                                    } catch (Exception e) {}
+                                    csvWriter.writeNext(rowData);
+                                }
 
-                        // Update progress
-                        if (i % updateInterval == 0 || i == totalRows - 1) {
-                            progressTracker.updateProgress(taskId, i, totalRows - 1, startTime);
-                        }
+                                if (rowNum % 2000 == 0) {
+                                    progressTracker.updateProgress(taskId, rowNum, totalRowsEstimate, startTime);
+                                }
+                            }
+
+                            @Override
+                            public void cell(String cellReference, String formattedValue, XSSFComment comment) {
+                                int col = (new org.apache.poi.ss.util.CellReference(cellReference)).getCol();
+                                if (col < 6) rowData[col] = formattedValue;
+                            }                                                                                                                                                                                              
+                        };
+
+                        XMLReader sheetParser = XMLHelper.newXMLReader();
+                        ContentHandler handler = new XSSFSheetXMLHandler(styles, strings, sheetHandler, false);
+                        sheetParser.setContentHandler(handler);
+                        sheetParser.parse(sheetSource);
                     }
                 }
             }
 
-            progressTracker.completeProgress(taskId, sheet.getPhysicalNumberOfRows() - 1,
-                    startTime, csvFilePath);
-
+            progressTracker.completeProgress(taskId, 1000000, startTime, csvFilePath);
         } catch (Exception e) {
-            progressTracker.failProgress(taskId, e.getMessage());
+            progressTracker.failProgress(taskId, "Processing failed: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            if (uploadedFile.exists()) {
+                uploadedFile.delete();
+            }
         }
     }
-
     private String getCellValueAsString(Cell cell) {
         if (cell == null) {
             return "";
         }
-
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue();
             case NUMERIC -> {
