@@ -17,22 +17,22 @@ public class ProgressTracker {
     private SimpMessagingTemplate messagingTemplate;
 
     public void updateProgress(String taskId, long current, long total, long startTime) {
-        long timeTaken = (System.currentTimeMillis() - startTime) / 1000;
+        long timeTaken = (System.currentTimeMillis() - startTime);
         ProgressDTO progress = ProgressDTO.running(taskId, current, total, timeTaken);
         progressMap.put(taskId, progress);
 
-        // Send real-time update via WebSocket
+        
         if (messagingTemplate != null) {
             messagingTemplate.convertAndSend("/topic/progress/" + taskId, progress);
         }
     }
 
     public void completeProgress(String taskId, long total, long startTime, String filePath) {
-        long timeTaken = (System.currentTimeMillis() - startTime) / 1000;
+        long timeTaken = (System.currentTimeMillis() - startTime);
         ProgressDTO progress = ProgressDTO.completed(taskId, total, timeTaken, filePath);
         progressMap.put(taskId, progress);
 
-        // Send completion update via WebSocket
+        
         if (messagingTemplate != null) {
             messagingTemplate.convertAndSend("/topic/progress/" + taskId, progress);
         }
