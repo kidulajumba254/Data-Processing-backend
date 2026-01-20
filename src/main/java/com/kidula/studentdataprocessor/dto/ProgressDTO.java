@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 public class ProgressDTO {
     private String taskId;
     private String status; // RUNNING, COMPLETED, FAILED
-    private long currentRecords;
-    private long totalRecords;
     private double progressPercentage;
     private long timeTakenSeconds;
+    private long timeTakenMs;
+    private boolean completed;
     private String message;
     private String filePath;
     private String error;
@@ -26,8 +26,10 @@ public class ProgressDTO {
                 .status("RUNNING")
                 .currentRecords(current)
                 .totalRecords(total)
-                .progressPercentage(total > 0 ? (double) current / total * 100 : 0)
-                .timeTakenSeconds(seconds)
+                .progressPercentage(total > 0 ? Math.min(100.0, (double) current / total * 100) : 0)
+                .timeTakenSeconds(seconds / 1000)
+                .timeTakenMs(seconds)
+                .completed(false)
                 .build();
     }
 
@@ -38,7 +40,9 @@ public class ProgressDTO {
                 .currentRecords(total)
                 .totalRecords(total)
                 .progressPercentage(100.0)
-                .timeTakenSeconds(seconds)
+                .timeTakenSeconds(seconds / 1000)
+                .timeTakenMs(seconds)
+                .completed(true)
                 .filePath(filePath)
                 .message("Process completed successfully")
                 .build();
@@ -49,6 +53,7 @@ public class ProgressDTO {
                 .taskId(taskId)
                 .status("FAILED")
                 .error(error)
+                .completed(true)
                 .message("Process failed")
                 .build();
     }
