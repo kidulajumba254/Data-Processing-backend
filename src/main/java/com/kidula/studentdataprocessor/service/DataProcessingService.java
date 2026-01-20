@@ -45,7 +45,6 @@ public class DataProcessingService {
                     try (InputStream sheetStream = iter.next()) {
                         InputSource sheetSource = new InputSource(sheetStream);
                         
-                        // Internal handler to bridge SAX events to CSV and Progress
                         XSSFSheetXMLHandler.SheetContentsHandler sheetHandler = new XSSFSheetXMLHandler.SheetContentsHandler() {
                             private int currentRow = -1;
                             private String[] rowData = new String[6];
@@ -72,7 +71,6 @@ public class DataProcessingService {
                                     csvWriter.writeNext(rowData);
                                 }
 
-                                // Update progress every 2000 rows for better real-time granularity
                                 if (rowNum % 2000 == 0) {
                                     progressTracker.updateProgress(taskId, rowNum, totalRowsEstimate, startTime);
                                 }
