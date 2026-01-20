@@ -279,4 +279,28 @@ public class ReportController {
         ProgressDTO progress = progressTracker.getProgress(taskId);
         return ResponseEntity.ok(progress);
     }
+
+    @GetMapping("/export/download/{fileName}")
+    public ResponseEntity<Resource> downloadExport(
+            @PathVariable String fileName) {
+        try {
+            File file = new File(System.getProperty("java.io.tmpdir") + File.separator + fileName);
+            if (!file.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            Resource resource = new FileSystemResource(file);
+            String contentType = "application/octet-stream";
+            if (fileName.endsWith(".pdf")) contentType = "application/pdf";
+            else if (fileName.endsWith(".csv")) contentType = "text/csv";
+            else if (fileName.endsWith(".xlsx")) contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
