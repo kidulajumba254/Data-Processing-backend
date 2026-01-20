@@ -18,82 +18,66 @@ import java.util.List;
 public class DataUploadService {
 
     @Autowired
-    private ProgressTracker progressTracker;
+    private StudentRepository studentRepository;
 
     @Autowired
-    private StudentRepository studentRepository;
+    private ProgressTracker progressTracker;
 
     private static final int BATCH_SIZE = 1000;
 
     @Async
-    @Transactional
-    public void uploadCsvToDatabase(String taskId, MultipartFile file) {
+
+    public void uploadCsvToDatabase(String taskId, String tempFilePath) {
         long startTime = System.currentTimeMillis();
+        File csvFile = new File(tempFilePath);
 
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+        try (CSVReader reader = new CSVReader(new FileReader(csvFile))) {
 
-            // Skip header
-            String[] header = csvReader.readNext();
+            studentRepository.deleteAllInBatch();
 
+            reader.readNext(); // Skip header
             List<Student> batch = new ArrayList<>();
             String[] line;
             long totalProcessed = 0;
-            long lineCount = 0;
 
-            // First pass to count total lines (for progress tracking)
-            try (CSVReader countReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
-                countReader.readNext(); // Skip header
-                while (countReader.readNext() != null) {
-                    lineCount++;
+            // Dynamic row counting for accurate progress
+            long totalLines = java.nio.file.Files.lines(csvFile.toPath()).count() - 1;
+            if (totalLines <= 0) totalLines = 1000000; // Fallback
+
+            while ((line = reader.readNext()) != null) {
+                Student student = new Student(
+                        Long.parseLong(line[0]),
+                        line[1], line[2],
+                        LocalDate.parse(line[3]),
+                        line[4],
+                        Integer.parseInt(line[5]) + 5 // Task 3 Requirement (+5)
+                );
+                batch.add(student);
+
+                if (batch.size() >= BATCH_SIZE) {
+                    saveBatch(batch); // Save in a small transaction
+                    batch.clear();
+                    totalProcessed += BATCH_SIZE;
+                    progressTracker.updateProgress(taskId, totalProcessed, totalLines, startTime);
                 }
             }
-
-            int updateInterval = (int) Math.max(1, lineCount / 100);
-
-            while ((line = csvReader.readNext()) != null) {
-                try {
-                    Long studentId = Long.parseLong(line[0]);
-                    String firstName = line[1];
-                    String lastName = line[2];
-                    LocalDate dob = LocalDate.parse(line[3]);
-                    String studentClass = line[4];
-                    Integer score = Integer.parseInt(line[5]) + 5; // Add 5 to score
-
-                    Student student = new Student(studentId, firstName, lastName,
-                            dob, studentClass, score);
-                    batch.add(student);
-
-                    // Save in batches
-                    if (batch.size() >= BATCH_SIZE) {
-                        studentRepository.saveAll(batch);
-                        studentRepository.flush();
-                        batch.clear();
-                        totalProcessed += BATCH_SIZE;
-
-                        if (totalProcessed % updateInterval == 0) {
-                            progressTracker.updateProgress(taskId, totalProcessed, lineCount, startTime);
-                        }
-                    }
-
-                } catch (Exception e) {
-                    System.err.println("Error processing line: " + String.join(",", line));
-                    e.printStackTrace();
-                }
-            }
-
-            // Save remaining records
             if (!batch.isEmpty()) {
-                studentRepository.saveAll(batch);
-                studentRepository.flush();
+                saveBatch(batch);
                 totalProcessed += batch.size();
             }
 
-            progressTracker.completeProgress(taskId, totalProcessed, startTime,
-                    "Database upload completed");
+            progressTracker.completeProgress(taskId, totalProcessed, startTime, "Success");
 
         } catch (Exception e) {
             progressTracker.failProgress(taskId, e.getMessage());
-            e.printStackTrace();
+        } finally {
+            if (csvFile.exists()) csvFile.delete();
         }
+    }
+
+    @Transactional // Only the small batch is transactional
+    public void saveBatch(List<Student> batch) {
+        studentRepository.saveAll(batch);
+        studentRepository.flush();
     }
 }
